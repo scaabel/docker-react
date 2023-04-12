@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - main
+env:
+  TEST_TAG: ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:test
 
 jobs:
   test:
@@ -11,6 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Build the Docker image
-        run: docker build . --file docker/dev/Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:$(date +%s)
+        run: docker build . --file docker/dev/Dockerfile --tag ${{ env.TEST_TAG }}
+      - name: Log in to the Docker Hub registry
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      - name: Push the Docker image
+        run: docker push ${{ secrets.DOCKER_SERVER }}/${{ env.TEST_TAG }}
       - name: Run the Docker image
-        run: docker run ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:$(date +%s) npm run test:ci
+        run: docker run ${{ env.TEST_TAG }} npm run test:ci
