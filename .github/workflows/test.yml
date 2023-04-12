@@ -1,0 +1,16 @@
+name: "Run Tests"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3;
+      - name: Build the Docker image
+        run: docker build . --file docker/dev/Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:${{ github.sha }}
+      - name: Run the Docker image
+        run: docker run ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:${{ github.sha }} npm run test:ci
